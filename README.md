@@ -12,9 +12,14 @@ firmware and USB-C port information.
 
 ## Features
 
+- **Overview:** a read-only summary of battery, thermals, fans, and firmware,
+  with hardware controls kept on their dedicated tabs.
 - **Battery:** set a charge limit, charge to 100% once with _Override Charge
   Limit_ (the limit comes back after the next restart), and slow down
   charging to reduce heat and battery wear.
+- **Schedule:** apply different charge limits on selected weekdays and times
+  using user systemd timers. Scheduling requires `framework_tool` from
+  `framework-system`.
 - **Fans & Thermals:** live temperatures, fan speed and throttling status.
   Leave the fans on automatic, or fix their speed.
 - **Touchpad & LED:** fingerprint reader LED brightness, and haptic touchpad
@@ -86,6 +91,26 @@ The `framework-kcmd` service starts on its own when you open the settings
 page. Enabling it also starts it at boot, so settings the hardware forgets
 (touchpad feedback, click force, charge speed) are applied again after a
 restart.
+
+### Fixture mode
+
+To preview the pages without Framework hardware or the daemon, launch the KCM
+with fixture mode enabled. All readings are simulated, setting changes stay in
+memory, and scheduling does not create systemd units:
+
+```sh
+FRAMEWORK_KCM_FIXTURE=1 kcmshell6 kcm_framework
+```
+
+The Overview tab then lets you choose a profile for testing model-specific
+controls. You can also pick a profile at launch:
+
+```sh
+FRAMEWORK_KCM_FIXTURE=1 FRAMEWORK_KCM_FIXTURE_MODEL=framework-12 kcmshell6 kcm_framework
+FRAMEWORK_KCM_FIXTURE=1 FRAMEWORK_KCM_FIXTURE_MODEL=framework-12-gen2 kcmshell6 kcm_framework
+FRAMEWORK_KCM_FIXTURE=1 FRAMEWORK_KCM_FIXTURE_MODEL=framework-13 kcmshell6 kcm_framework
+FRAMEWORK_KCM_FIXTURE=1 FRAMEWORK_KCM_FIXTURE_MODEL=framework-13-pro kcmshell6 kcm_framework
+```
 
 To uninstall, run `sudo pacman -R framework-kcm` or `sudo apt remove framework-kcm`.
 

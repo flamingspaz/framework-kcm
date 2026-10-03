@@ -33,6 +33,16 @@ class FrameworkKcm : public KQuickConfigModule {
     Q_PROPERTY(bool daemonAvailable READ daemonAvailable NOTIFY daemonAvailableChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(QString errorMessage READ errorMessage NOTIFY errorMessageChanged)
+    Q_PROPERTY(bool fixtureMode READ fixtureMode CONSTANT)
+    Q_PROPERTY(QString fixtureModel READ fixtureModel NOTIFY fixtureChanged)
+    Q_PROPERTY(QVariantList fixtureModels READ fixtureModels CONSTANT)
+    Q_PROPERTY(bool supportsKeyboardBacklight READ supportsKeyboardBacklight NOTIFY fixtureChanged)
+    Q_PROPERTY(bool supportsInputDeck READ supportsInputDeck NOTIFY fixtureChanged)
+    Q_PROPERTY(bool supportsTabletMode READ supportsTabletMode NOTIFY fixtureChanged)
+    Q_PROPERTY(bool supportsTouchscreen READ supportsTouchscreen NOTIFY fixtureChanged)
+    Q_PROPERTY(QVariantMap powerInfo READ powerInfo NOTIFY powerChanged)
+    Q_PROPERTY(bool scheduleEnabled READ scheduleEnabled NOTIFY scheduleChanged)
+    Q_PROPERTY(QVariantList schedules READ schedules NOTIFY scheduleChanged)
 
     // Which live readings the visible page needs: "thermal", "ports" or empty
     Q_PROPERTY(QString liveData READ liveData WRITE setLiveData NOTIFY liveDataChanged)
@@ -67,6 +77,16 @@ public:
     [[nodiscard]] bool daemonAvailable() const { return m_daemonAvailable; }
     [[nodiscard]] bool busy() const { return m_busy; }
     [[nodiscard]] QString errorMessage() const { return m_errorMessage; }
+    [[nodiscard]] bool fixtureMode() const { return m_fixtureMode; }
+    [[nodiscard]] QString fixtureModel() const { return m_fixtureModel; }
+    [[nodiscard]] QVariantList fixtureModels() const;
+    [[nodiscard]] bool supportsKeyboardBacklight() const { return m_supportsKeyboardBacklight; }
+    [[nodiscard]] bool supportsInputDeck() const { return m_supportsInputDeck; }
+    [[nodiscard]] bool supportsTabletMode() const { return m_supportsTabletMode; }
+    [[nodiscard]] bool supportsTouchscreen() const { return m_supportsTouchscreen; }
+    [[nodiscard]] QVariantMap powerInfo() const { return m_powerInfo; }
+    [[nodiscard]] bool scheduleEnabled() const { return m_scheduleEnabled; }
+    [[nodiscard]] QVariantList schedules() const { return m_schedules; }
     [[nodiscard]] QString liveData() const { return m_liveData; }
     void setLiveData(const QString &liveData);
 
@@ -99,6 +119,8 @@ public:
     void setClickForce(const QString &value);
 
     Q_INVOKABLE void clearError();
+    Q_INVOKABLE void setFixtureModel(const QString &model);
+    Q_INVOKABLE bool configureSchedule(bool enabled, const QVariantList &schedules);
     // Charge to 100% until the next boot; applied immediately, not on Apply
     Q_INVOKABLE void overrideChargeLimit();
     Q_INVOKABLE void cancelChargeLimitOverride();
@@ -114,6 +136,9 @@ Q_SIGNALS:
     void supportChanged();
     void settingsChanged();
     void chargeOverrideChanged();
+    void fixtureChanged();
+    void powerChanged();
+    void scheduleChanged();
 
 private:
     using ReplyHandler = std::function<void(const QDBusMessage &)>;
@@ -123,6 +148,10 @@ private:
               const ErrorHandler &onError = {}, int timeout = -1);
     void refreshLive();
     void loadSettings();
+    void loadFixture();
+    void loadSchedule();
+    void updateFixtureProfile();
+    bool applyScheduleUnits(bool enabled, const QVariantList &schedules);
     template<typename T>
     void syncSetting(T FrameworkSettings::*field, const T &value);
     void runNextWrite();
@@ -147,16 +176,25 @@ private:
 
     bool m_daemonAvailable = true;
     bool m_busy = false;
+    bool m_fixtureMode = false;
+    QString m_fixtureModel;
+    bool m_supportsKeyboardBacklight = false;
+    bool m_supportsInputDeck = false;
+    bool m_supportsTabletMode = false;
+    bool m_supportsTouchscreen = false;
     bool m_liveInFlight = false;
     QString m_errorMessage;
     QString m_liveData;
     QTimer m_liveTimer;
 
     QVariantMap m_systemInfo;
+    QVariantMap m_powerInfo;
     QVariantList m_sensors;
     QVariantList m_fans;
     QVariantMap m_throttle;
     QVariantList m_ports;
     bool m_fpLedSupported = false;
     bool m_chargeLimitOverridden = false;
+    bool m_scheduleEnabled = false;
+    QVariantList m_schedules;
 };

@@ -7,6 +7,87 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 Kirigami.FormLayout {
+    RowLayout {
+        Kirigami.FormData.label: i18n("Battery:")
+        spacing: Kirigami.Units.largeSpacing
+
+        Item {
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 6
+            Layout.preferredHeight: Kirigami.Units.gridUnit * 9
+
+            Rectangle {
+                id: batteryBody
+                anchors.centerIn: parent
+                width: Kirigami.Units.gridUnit * 4
+                height: Kirigami.Units.gridUnit * 7
+                radius: Kirigami.Units.smallSpacing
+                color: Kirigami.Theme.backgroundColor
+                border.width: 3
+                border.color: Kirigami.Theme.textColor
+                clip: true
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.leftMargin: 3
+                    anchors.rightMargin: 3
+                    anchors.bottomMargin: 3
+                    height: (parent.height - 6) * Math.max(0, Math.min(100, kcm.powerInfo.percentage ?? 0)) / 100
+                    color: (kcm.powerInfo.percentage ?? 100) <= 20
+                        ? Kirigami.Theme.negativeTextColor
+                        : Kirigami.Theme.highlightColor
+                }
+
+                QQC2.Label {
+                    anchors.centerIn: parent
+                    text: kcm.powerInfo.batteryPresent && (kcm.powerInfo.percentage ?? -1) >= 0
+                        ? i18nc("percent", "%1%", kcm.powerInfo.percentage)
+                        : "--"
+                    font.bold: true
+                    font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.5
+                }
+            }
+
+            Rectangle {
+                anchors.horizontalCenter: batteryBody.horizontalCenter
+                anchors.bottom: batteryBody.top
+                width: Kirigami.Units.smallSpacing * 2
+                height: Kirigami.Units.smallSpacing
+                color: Kirigami.Theme.textColor
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            QQC2.Label {
+                text: {
+                    const power = kcm.powerInfo;
+                    if (!power.batteryPresent) return i18n("Battery unavailable");
+                    if (power.charging) return i18n("Charging");
+                    if (power.discharging) return i18n("Discharging");
+                    return i18n("Not charging");
+                }
+                font.bold: true
+                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.15
+            }
+            QQC2.Label {
+                text: kcm.powerInfo.acPresent === undefined
+                    ? i18n("Power status unavailable")
+                    : kcm.powerInfo.acPresent ? i18n("AC power connected") : i18n("Running on battery")
+                color: Kirigami.Theme.disabledTextColor
+            }
+            Kirigami.Separator {
+                Layout.fillWidth: true
+            }
+            QQC2.Label {
+                text: kcm.chargeLimit > 0 ? i18n("Charge limit: %1%", kcm.chargeLimit) : i18n("Charge limit unavailable")
+            }
+        }
+    }
+
     Item {
         Kirigami.FormData.isSection: true
         Kirigami.FormData.label: i18n("Charging")
