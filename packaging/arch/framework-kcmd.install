@@ -1,5 +1,5 @@
 post_install() {
-  echo "framework-kcmd starts on demand when you open System Settings → Framework Laptop."
+  echo "framework-kcmd starts on demand when you open Framework Settings or the KDE System Settings module."
   echo "To re-apply touchpad and charge-rate settings at boot, enable it:"
   echo "  systemctl enable --now framework-kcmd"
 }

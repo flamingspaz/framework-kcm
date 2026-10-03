@@ -32,7 +32,9 @@ Series 3)**. Other Framework laptops use the same embedded controller
 interface, so most features should work there too, but they haven't been
 tested.
 
-Requires KDE Plasma 6.
+The System Settings module requires KDE Plasma 6. A separate desktop app,
+`framework-settings`, is also provided for other desktop environments; it is
+built with Qt Quick Controls and has no KDE runtime dependency.
 
 ## Install
 
@@ -59,35 +61,51 @@ The underlying package expression is in `packaging/nix/package.nix`.
 **Arch Linux**
 
 ```sh
-sudo pacman -U framework-kcm-*.pkg.tar.zst
+sudo pacman -U framework-*.pkg.tar.zst
 sudo systemctl enable --now framework-kcmd
 ```
+
+The Arch `framework-settings` meta-package installs the GUI, KCM, and service.
+For a non-KDE desktop, install `framework-gui` instead; it brings in
+`framework-kcmd` without the KCM.
 
 **Ubuntu 26.04**
 
 ```sh
-sudo apt install ./framework-kcm_*.deb
+sudo apt install ./framework-*.deb
 ```
 
-The Ubuntu package enables the background service for you.
+This installs the `framework-settings` meta-package and its GUI, KCM, and
+service packages. From a repository, install `framework-gui` alone for a
+non-KDE setup; it pulls in the daemon but not the KCM. The daemon package
+configures and enables the background service.
 
 **Fedora**
 
-`framework-kcm` is available in [Terra](https://terrapkg.com).
+The `framework-settings` meta-package is available in [Terra](https://terrapkg.com).
 
 ```sh
-sudo dnf install framework-kcm
+sudo dnf install framework-settings
 ```
 
+For a non-KDE desktop, install only `framework-gui`; it pulls in the service
+without installing the KCM.
+
 Then open **System Settings → System → Framework Laptop**, or run
-`kcmshell6 kcm_framework`.
+`kcmshell6 kcm_framework`. On non-KDE desktops, launch **Framework Settings**
+or run `framework-settings`.
 
 The `framework-kcmd` service starts on its own when you open the settings
 page. Enabling it also starts it at boot, so settings the hardware forgets
 (touchpad feedback, click force, charge speed) are applied again after a
 restart.
 
-To uninstall, run `sudo pacman -R framework-kcm` or `sudo apt remove framework-kcm`.
+To uninstall the full suite, remove the `framework-settings` meta-package. If
+installed separately, remove the packages you chose (`framework-gui`,
+`framework-kcm`, and/or `framework-kcmd`). On Arch,
+`sudo pacman -Rns framework-settings` also removes unneeded subpackages; on
+Debian-based systems, use `sudo apt remove framework-settings` and optionally
+`sudo apt autoremove`.
 
 ## Permissions
 

@@ -22,12 +22,12 @@ On a `v*` tag, the workflow:
 1. Checks that the tag matches both versions, and stops if it doesn't.
 2. Builds the packages in parallel:
 
-   | Distribution | Package                                        | Built with                              |
-   | ------------ | ---------------------------------------------- | --------------------------------------- |
-   | Arch Linux   | `framework-kcm-<version>-1-x86_64.pkg.tar.zst` | `packaging/arch/PKGBUILD` and `makepkg` |
-   | Ubuntu 26.04 | `framework-kcm_<version>_amd64.deb`            | CPack (`packaging/cpack.cmake`)         |
+   | Distribution | Packages                                                                                     | Built with                              |
+   | ------------ | -------------------------------------------------------------------------------------------- | --------------------------------------- |
+   | Arch Linux   | `framework-settings`, `framework-gui`, `framework-kcm`, and `framework-kcmd`                 | `packaging/arch/PKGBUILD` and `makepkg` |
+   | Ubuntu 26.04 | `framework-settings`, `framework-gui`, `framework-kcm`, and `framework-kcmd` `.deb` packages | CPack (`packaging/cpack.cmake`)         |
 
-3. Creates a GitHub release for the tag, attaches both packages, and writes
+3. Creates a GitHub release for the tag, attaches all package files, and writes
    release notes from the commits since the last tag.
 
 ## Packaging notes
@@ -36,7 +36,9 @@ On a `v*` tag, the workflow:
   `pkgver` and `url`. LTO is turned off (`options=('!lto')`) because GCC LTO
   objects from hidapi's bundled C code can't be read by the linker cargo
   uses. The `-debug` split package isn't attached to releases.
-  `framework-kcm.install` reminds the user to enable the service.
+  `framework-kcmd.install` reminds the user to enable the service. The release
+  contains the `framework-settings` meta-package and separate GUI, KCM, and
+  daemon packages.
 - **Ubuntu:** `dpkg-shlibdeps` works out the library dependencies. The QML
   modules and services needed only at runtime are listed by hand in
   `packaging/cpack.cmake`. The maintainer scripts in `packaging/debian/`

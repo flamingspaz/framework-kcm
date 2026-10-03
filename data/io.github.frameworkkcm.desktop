@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Framework Settings
+Comment=Configure Framework laptop hardware settings
+Exec=framework-settings
+Icon=framework-gui
+Categories=Settings;HardwareSettings;

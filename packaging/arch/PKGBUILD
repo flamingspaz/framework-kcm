@@ -3,45 +3,70 @@
 # Built by CI from a `git archive` tarball placed next to this file
 # (see .github/workflows/build.yml). CI also fills in pkgver and url.
 
-pkgname=framework-kcm
+pkgbase=framework-settings
+pkgname=('framework-settings' 'framework-gui' 'framework-kcm' 'framework-kcmd')
+pkgdesc='Framework laptop settings packages'
 pkgver=0.1.1
 pkgrel=1
-pkgdesc='System Settings module for Framework laptops: charge limit, fans, touchpad, LEDs and firmware info'
 arch=('x86_64')
 url='https://github.com/OWNER/framework-kcm'
 license=('GPL-3.0-or-later')
-# dbus, kirigami, polkit and qt6-declarative are only used at runtime (bus
-# policy, QML modules), so namcap can't see them
-depends=(
-  'dbus'
-  'glibc'
-  'hicolor-icon-theme'
+makedepends=(
+  'cmake'
+  'extra-cmake-modules'
+  'git'
+  'hidapi'
   'kcmutils'
   'kcoreaddons'
   'ki18n'
   'kirigami'
-  'libgcc'
-  'libstdc++'
-  'polkit'
+  'libusb'
   'qt6-base'
   'qt6-declarative'
+  'rust'
   'systemd-libs'
 )
-makedepends=('cmake' 'extra-cmake-modules' 'git' 'rust')
-install=framework-kcm.install
-# GCC LTO objects from hidapi's bundled C code can't be read by the linker cargo uses
 options=('!lto')
-source=("$pkgname-$pkgver.tar.gz")
+source=("$pkgbase-$pkgver.tar.gz")
 sha256sums=('SKIP')
 
+# GCC LTO objects from hidapi's bundled C code can't be read by the linker cargo uses.
 build() {
   export CARGO_HOME="$srcdir/cargo-home"
-  cmake -B build -S "$pkgname-$pkgver" \
+  cmake -B build -S "$pkgbase-$pkgver" \
     -DCMAKE_BUILD_TYPE=None \
-    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_KCM=ON \
+    -DBUILD_GUI=ON \
+    -DBUILD_DAEMON=ON
   cmake --build build
 }
 
-package() {
-  DESTDIR="$pkgdir" cmake --install build
+package_framework-settings() {
+  pkgdesc='Meta package for Framework laptop settings'
+  depends=('framework-gui' 'framework-kcm' 'framework-kcmd')
+  DESTDIR="$pkgdir" cmake --install build --component meta
+  install -Dm644 "$pkgbase-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/framework-settings/LICENSE"
+}
+
+package_framework-gui() {
+  pkgdesc='Standalone Qt settings application for Framework laptops'
+  depends=('framework-kcmd' 'hicolor-icon-theme' 'qt6-base' 'qt6-declarative')
+  DESTDIR="$pkgdir" cmake --install build --component gui
+  install -Dm644 "$pkgbase-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/framework-gui/LICENSE"
+}
+
+package_framework-kcm() {
+  pkgdesc='KDE System Settings module for Framework laptops'
+  depends=('framework-kcmd' 'hicolor-icon-theme' 'kcmutils' 'kcoreaddons' 'ki18n' 'kirigami' 'qt6-base' 'qt6-declarative')
+  DESTDIR="$pkgdir" cmake --install build --component kcm
+  install -Dm644 "$pkgbase-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/framework-kcm/LICENSE"
+}
+
+package_framework-kcmd() {
+  pkgdesc='System service for Framework laptop hardware settings'
+  depends=('dbus' 'hidapi' 'libusb' 'polkit' 'systemd-libs')
+  install=framework-kcmd.install
+  DESTDIR="$pkgdir" cmake --install build --component kcmd
+  install -Dm644 "$pkgbase-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/framework-kcmd/LICENSE"
 }

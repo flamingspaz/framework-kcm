@@ -1,14 +1,15 @@
 # Building from source
 
-Framework KCM consists of a KDE/Qt 6 System Settings module and a Rust
-system service. The default build builds both; set `BUILD_DAEMON=OFF` to work
-on the UI without building the service.
+Framework settings includes a KDE/Qt 6 System Settings module, a standalone
+Qt Quick application, and a Rust system service. By default all three are
+built. The standalone application has no KDE build or runtime dependency.
 
 ## Requirements
 
 - CMake 3.22 or newer and a C++20 compiler
-- Extra CMake Modules, Qt 6.6 or newer (Core, DBus, Qml and Quick), and KF6
-  (CoreAddons, I18n and KCMUtils)
+- Qt 6.6 or newer (Core, DBus, Qml and Quick) for either UI; add Quick
+  Controls 2 for the standalone application
+- Extra CMake Modules and KF6 (CoreAddons, I18n and KCMUtils) for the KCM
 - Rust and Cargo (the service is built with `cargo build --release --locked`)
 - The native development libraries used by `framework_lib` (including hidapi,
   libusb and systemd)
@@ -83,6 +84,20 @@ the plugin at `/usr/lib64/qt6/plugins/plasma/kcms/systemsettings/kcm_framework.s
 For UI-only work, configure with `-DBUILD_DAEMON=OFF`; that build will not
 produce or install `framework-kcmd`, so skip the service commands above.
 
+To build just the standalone Qt application on a system without KDE
+libraries, turn off the KCM explicitly:
+
+```sh
+cmake -S . -B build-qt \
+  -DBUILD_KCM=OFF -DBUILD_GUI=ON -DBUILD_DAEMON=OFF
+cmake --build build-qt --target framework-settings
+./build-qt/gui/framework-settings
+```
+
+The app uses the same `framework-kcmd` system service as the KCM, so that
+service must be installed and running for hardware controls to work. With
+`BUILD_KCM=OFF`, CPack names the standalone package `framework-gui`.
+
 ## With Docker
 
 `build.sh` is an optional wrapper that builds inside an Arch-based container,
@@ -101,7 +116,11 @@ intended for distribution.
 
 ## Useful options
 
-- `-DBUILD_DAEMON=OFF`: build only the KCM, for example while working on QML.
+- `-DBUILD_KCM=OFF`: omit the KDE System Settings module and configure without
+  ECM or KF6; use with `-DBUILD_GUI=ON` for a Qt-only desktop app build.
+- `-DBUILD_GUI=OFF`: omit the standalone Qt desktop application.
+- `-DBUILD_DAEMON=OFF`: do not build the system service, for example while
+  working on either UI.
 - `-DCMAKE_BUILD_TYPE=Debug`: make a debug build; `Release` or
   `RelWithDebInfo` are suitable for packaging.
 - The daemon uses `cargo build --release --locked`. After changing Rust
