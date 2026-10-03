@@ -3,13 +3,14 @@
 let
   version = "0.1.1";
 
-  framework-kcmd = import ./framework-kcmd.nix { inherit pkgs version; };
+  frameworkd = import ./frameworkd.nix { inherit pkgs version; };
 
   framework-kcm = import ./framework-kcm.nix {
-    inherit pkgs version framework-kcmd;
+    inherit pkgs version frameworkd;
   };
 in
 {
   default = framework-kcm;
-  inherit framework-kcm framework-kcmd;
+  inherit framework-kcm frameworkd;
+  framework-kcmd = frameworkd;
 }

@@ -41,7 +41,7 @@ fn path() -> PathBuf {
     // systemd sets this from StateDirectory=
     let dir = std::env::var_os("STATE_DIRECTORY")
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("/var/lib/framework-kcmd"));
+        .unwrap_or_else(|| PathBuf::from("/var/lib/frameworkd"));
     dir.join("state.json")
 }
 

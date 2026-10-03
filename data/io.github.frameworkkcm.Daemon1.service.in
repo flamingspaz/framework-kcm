@@ -2,4 +2,4 @@
 Name=io.github.frameworkkcm.Daemon1
 Exec=@DAEMON_PATH@
 User=root
-SystemdService=framework-kcmd.service
+SystemdService=frameworkd.service

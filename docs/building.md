@@ -73,7 +73,7 @@ service and D-Bus configuration and enable the daemon:
 ```sh
 sudo systemctl daemon-reload
 sudo systemctl reload dbus
-sudo systemctl enable --now framework-kcmd
+sudo systemctl enable --now frameworkd
 ```
 
 `KDE_INSTALL_USE_QT_SYS_PATHS=ON` installs the module under Qt's plugin
@@ -81,7 +81,7 @@ path, which is where Plasma 6 searches for KCMs. On Fedora this should place
 the plugin at `/usr/lib64/qt6/plugins/plasma/kcms/systemsettings/kcm_framework.so`.
 
 For UI-only work, configure with `-DBUILD_DAEMON=OFF`; that build will not
-produce or install `framework-kcmd`, so skip the service commands above.
+produce or install `frameworkd`, so skip the service commands above.
 
 ## With Docker
 
@@ -117,14 +117,14 @@ busctl call io.github.frameworkkcm.Daemon1 /io/github/frameworkkcm/Daemon1 \
     io.github.frameworkkcm.Daemon1 GetThermal
 busctl call io.github.frameworkkcm.Daemon1 /io/github/frameworkkcm/Daemon1 \
     io.github.frameworkkcm.Daemon1 SetChargeLimit i 80
-journalctl -u framework-kcmd
+journalctl -u frameworkd
 ```
 
 Run it in the foreground with more logging (stop the service first):
 
 ```sh
-sudo systemctl stop framework-kcmd
-sudo RUST_LOG=debug build/cargo/release/framework-kcmd
+sudo systemctl stop frameworkd
+sudo RUST_LOG=debug build/cargo/release/frameworkd
 ```
 
 See [architecture.md](architecture.md) for the full D-Bus API.

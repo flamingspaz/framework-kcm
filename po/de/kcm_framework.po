@@ -390,8 +390,8 @@ msgstr "Dienst:"
 
 #: kcm/ui/SystemPage.qml:108
 #, kde-format
-msgid "framework-kcmd %1"
-msgstr "framework-kcmd %1"
+msgid "frameworkd %1"
+msgstr "frameworkd %1"
 
 #: kcm/ui/SystemPage.qml:113
 #, kde-format
@@ -623,10 +623,10 @@ msgstr ""
 #: kcm/ui/main.qml:21
 #, kde-format
 msgid ""
-"Could not reach the Framework hardware service (framework-kcmd). Make sure "
+"Could not reach the Framework hardware service (frameworkd). Make sure "
 "it is installed and that D-Bus activation or the systemd unit is enabled."
 msgstr ""
-"Der Framework-Hardwaredienst (framework-kcmd) ist nicht erreichbar. Stellen "
+"Der Framework-Hardwaredienst (frameworkd) ist nicht erreichbar. Stellen "
 "Sie sicher, dass er installiert ist und die D-Bus-Aktivierung oder die "
 "systemd-Unit aktiviert ist."
 

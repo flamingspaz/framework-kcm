@@ -41,4 +41,4 @@ On a `v*` tag, the workflow:
   modules and services needed only at runtime are listed by hand in
   `packaging/cpack.cmake`. The maintainer scripts in `packaging/debian/`
   enable the service on install, disable it on removal, and delete
-  `/var/lib/framework-kcmd` on purge.
+  `/var/lib/frameworkd` on purge.

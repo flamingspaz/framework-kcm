@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+# Up to 0.1.1 the daemon was called framework-kcmd. Its unit file is still
+# installed at this point, so stop and disable it here (otherwise the enable
+# symlink is left dangling) and carry its saved settings over.
+if [ "$1" = "upgrade" ] && [ -e /usr/lib/systemd/system/framework-kcmd.service ]; then
+    if [ -d /run/systemd/system ]; then
+        systemctl disable --now framework-kcmd.service || true
+    fi
+    if [ -d /var/lib/framework-kcmd ] && [ ! -e /var/lib/frameworkd ]; then
+        mv /var/lib/framework-kcmd /var/lib/frameworkd
+    fi
+fi

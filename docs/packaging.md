@@ -2,7 +2,7 @@
 
 Framework KCM is packaged with distro-native tools. The packages include the
 System Settings module, its D-Bus and polkit configuration, translations, and
-the `framework-kcmd` service.
+the `frameworkd` service.
 
 ## Fedora RPMs
 
@@ -45,7 +45,7 @@ To apply write-only touchpad and charge-rate settings at boot, enable the
 service after installation:
 
 ```sh
-sudo systemctl enable --now framework-kcmd.service
+sudo systemctl enable --now frameworkd.service
 ```
 
 ## Debian and Ubuntu packages

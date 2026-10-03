@@ -16,7 +16,7 @@
         in
         {
           default = packageSet.framework-kcm;
-          inherit (packageSet) framework-kcm framework-kcmd;
+          inherit (packageSet) framework-kcm frameworkd framework-kcmd;
         });
     };
 }

@@ -18,7 +18,7 @@ KCM.SimpleKCM {
             Layout.margins: Kirigami.Units.smallSpacing
             visible: !kcm.daemonAvailable
             type: Kirigami.MessageType.Error
-            text: i18n("Could not reach the Framework hardware service (framework-kcmd). Make sure it is installed and that D-Bus activation or the systemd unit is enabled.")
+            text: i18n("Could not reach the Framework hardware service (frameworkd). Make sure it is installed and that D-Bus activation or the systemd unit is enabled.")
         }
 
         Kirigami.InlineMessage {

@@ -51,16 +51,17 @@ The `framework-kcm` package includes the KCM and points its D-Bus and systemd
 service files at the daemon in the Nix store. Build the daemon by itself with:
 
 ```sh
-nix build .#framework-kcmd
+nix build .#frameworkd
 ```
 
-The underlying package expression is in `packaging/nix/package.nix`.
+The underlying package expression is in `packaging/nix/package.nix`. The old
+`framework-kcmd` Nix attribute remains as a compatibility alias.
 
 **Arch Linux**
 
 ```sh
 sudo pacman -U framework-kcm-*.pkg.tar.zst
-sudo systemctl enable --now framework-kcmd
+sudo systemctl enable --now frameworkd
 ```
 
 **Ubuntu 26.04**
@@ -82,7 +83,7 @@ sudo dnf install framework-kcm
 Then open **System Settings → System → Framework Laptop**, or run
 `kcmshell6 kcm_framework`.
 
-The `framework-kcmd` service starts on its own when you open the settings
+The `frameworkd` service starts on its own when you open the settings
 page. Enabling it also starts it at boot, so settings the hardware forgets
 (touchpad feedback, click force, charge speed) are applied again after a
 restart.

@@ -1,5 +1,5 @@
 [package]
-name = "framework-kcmd"
+name = "frameworkd"
 version = "0.1.1"
 description = "System D-Bus service exposing Framework Laptop EC controls to the Framework KCM"
 edition = "2021"

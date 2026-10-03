@@ -1,7 +1,7 @@
 # How it works
 
 ```
-System Settings ──D-Bus (system bus)──▶ framework-kcmd (root) ──framework_lib──▶ EC / HID / SMBIOS
+System Settings ──D-Bus (system bus)──▶ frameworkd (root) ──framework_lib──▶ EC / HID / SMBIOS
   kcm_framework (C++/QML)                   polkit checks on writes
 ```
 
@@ -11,12 +11,12 @@ user. So the project has two parts:
 - **`kcm/`**: `kcm_framework`, the System Settings module. A C++ backend
   (`frameworkkcm.cpp`) talks to the daemon over D-Bus, and the QML pages in
   `kcm/ui/` show the result.
-- **`daemon/`**: `framework-kcmd`, a small Rust service that links
+- **`daemon/`**: `frameworkd`, a small Rust service that links
   `framework_lib` directly and serves `io.github.frameworkkcm.Daemon1` at
   `/io/github/frameworkkcm/Daemon1` on the system bus.
 
 The daemon is D-Bus activated, so it starts when the KCM first calls it. Its
-systemd unit (`framework-kcmd.service`) can also be enabled to start it at
+systemd unit (`frameworkd.service`) can also be enabled to start it at
 boot (see [Remembered settings](#remembered-settings)).
 
 ## Authorization
@@ -34,7 +34,7 @@ Anyone can call the read methods. Every write first checks with polkit
 
 Some settings can't be read back from the hardware: touchpad haptic
 intensity, click force and the charge rate limit. The daemon saves the last
-value it set in `/var/lib/framework-kcmd/state.json` and applies it again
+value it set in `/var/lib/frameworkd/state.json` and applies it again
 when it starts. That's why the systemd unit is worth enabling at boot.
 
 Fan mode is only kept in memory. When the daemon exits, it hands the fans

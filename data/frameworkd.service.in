@@ -6,7 +6,7 @@ Documentation=https://github.com/FrameworkComputer/framework-system
 Type=dbus
 BusName=io.github.frameworkkcm.Daemon1
 ExecStart=@DAEMON_PATH@
-StateDirectory=framework-kcmd
+StateDirectory=frameworkd
 
 # Needs raw access to /dev/cros_ec, the EC I/O ports, hidraw and SMBIOS,
 # so keep hardening to what doesn't get in the way of that.

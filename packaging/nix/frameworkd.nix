@@ -1,7 +1,7 @@
 { pkgs ? import <nixpkgs> { }, version ? "0.1.1" }:
 
 pkgs.rustPlatform.buildRustPackage {
-  pname = "framework-kcmd";
+  pname = "frameworkd";
   inherit version;
   src = ../../daemon;
 

@@ -2,5 +2,5 @@
 set -e
 
 if [ "$1" = "remove" ] && [ -d /run/systemd/system ]; then
-    systemctl disable --now framework-kcmd.service || true
+    systemctl disable --now frameworkd.service || true
 fi

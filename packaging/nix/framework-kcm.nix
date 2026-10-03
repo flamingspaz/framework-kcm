@@ -1,7 +1,7 @@
 {
   pkgs ? import <nixpkgs> { },
   version ? "0.1.1",
-  framework-kcmd ? import ./framework-kcmd.nix { inherit pkgs version; },
+  frameworkd ? import ./frameworkd.nix { inherit pkgs version; },
 }:
 
 pkgs.stdenv.mkDerivation {
@@ -30,6 +30,6 @@ pkgs.stdenv.mkDerivation {
   cmakeFlags = [
     "-DKDE_INSTALL_USE_QT_SYS_PATHS=ON"
     "-DBUILD_DAEMON=OFF"
-    "-DDAEMON_PATH=${framework-kcmd}/bin/framework-kcmd"
+    "-DDAEMON_PATH=${frameworkd}/bin/frameworkd"
   ];
 }

@@ -105,7 +105,7 @@ Kirigami.FormLayout {
     QQC2.Label {
         Kirigami.FormData.label: i18n("Service:")
         visible: !!info.daemonVersion
-        text: i18n("framework-kcmd %1", info.daemonVersion)
+        text: i18n("frameworkd %1", info.daemonVersion)
     }
 
     Item {
