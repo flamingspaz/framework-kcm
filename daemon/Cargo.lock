@@ -454,22 +454,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484"
 
 [[package]]
-name = "frameworkd"
-version = "0.1.1"
-dependencies = [
- "clap",
- "dmidecode",
- "env_logger",
- "framework_lib",
- "log",
- "serde",
- "serde_json",
- "tokio",
- "zbus",
- "zbus_polkit",
-]
-
-[[package]]
 name = "framework_lib"
 version = "0.6.6"
 source = "git+https://github.com/FrameworkComputer/framework-system?tag=v0.6.6#9c0f6cf83ec3b443be0adb1cbf3dea8a9f8f722c"
@@ -506,6 +490,22 @@ dependencies = [
  "winreg",
  "wmi",
  "zerocopy",
+]
+
+[[package]]
+name = "frameworkd"
+version = "0.1.1"
+dependencies = [
+ "clap",
+ "dmidecode",
+ "env_logger",
+ "framework_lib",
+ "log",
+ "serde",
+ "serde_json",
+ "tokio",
+ "zbus",
+ "zbus_polkit",
 ]
 
 [[package]]

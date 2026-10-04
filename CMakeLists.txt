@@ -12,6 +12,18 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(FeatureSummary)
 
+execute_process(
+    COMMAND sh "${CMAKE_SOURCE_DIR}/packaging/check-daemon-migrations.sh"
+    RESULT_VARIABLE DAEMON_MIGRATION_CHECK_RESULT
+    OUTPUT_VARIABLE DAEMON_MIGRATION_CHECK_OUTPUT
+    ERROR_VARIABLE DAEMON_MIGRATION_CHECK_ERROR)
+if(NOT DAEMON_MIGRATION_CHECK_RESULT EQUAL 0)
+    message(FATAL_ERROR
+        "Packaging migration check failed. Do not build or release without the framework-kcmd upgrade migrations.\n"
+        "${DAEMON_MIGRATION_CHECK_OUTPUT}${DAEMON_MIGRATION_CHECK_ERROR}")
+endif()
+message(STATUS "${DAEMON_MIGRATION_CHECK_OUTPUT}")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

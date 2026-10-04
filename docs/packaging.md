@@ -48,6 +48,11 @@ service after installation:
 sudo systemctl enable --now frameworkd.service
 ```
 
+Arch upgrades from releases that called the daemon `framework-kcmd` are handled
+by the package install script: it stops the old unit, moves
+`/var/lib/framework-kcmd` to `/var/lib/frameworkd`, and carries over whether
+the old unit was enabled.
+
 ## Debian and Ubuntu packages
 
 Debian packages use CPack settings from `packaging/cpack.cmake` and maintainer
@@ -75,7 +80,15 @@ cmake --build build --parallel
 The `.deb` is written into `build/`. CPack uses `dpkg-shlibdeps` for shared
 library dependencies; QML runtime dependencies are listed explicitly in
 `packaging/cpack.cmake`. The maintainer scripts reload D-Bus and systemd,
-enable the service on installation, and remove its state on purge.
+enable the service on installation, migrate the old `framework-kcmd` unit and
+state directory during upgrades, disable the service on removal, and remove
+its state on purge.
+
+Every CMake configure runs `packaging/check-daemon-migrations.sh`. Configuration
+fails if the legacy service/state migration is missing from Arch, Debian, or
+either Fedora spec, or if the legacy Nix attribute alias is removed. This gate
+also runs in release package builds, so releases cannot silently omit a
+migration from the supported packaging definitions.
 
 ## Releases and CI
 
