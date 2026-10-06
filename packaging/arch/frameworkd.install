@@ -1,14 +1,8 @@
-post_install() {
-  echo "frameworkd starts on demand when you open System Settings → Framework Laptop."
-  echo "To re-apply touchpad and charge-rate settings at boot, enable it:"
-  echo "  systemctl enable --now frameworkd"
-}
-
 pre_remove() {
   systemctl disable --now frameworkd.service >/dev/null 2>&1 || true
 }
 
-pre_upgrade() {
+frameworkd_migrate_old_install() {
   # Up to 0.1.1 the daemon was called framework-kcmd. Its unit file is still
   # installed at this point, so disable it here (otherwise the enable symlink
   # is left dangling), remember whether it was enabled, and move its state.
@@ -22,9 +16,28 @@ pre_upgrade() {
   fi
 }
 
-post_upgrade() {
+frameworkd_enable_after_migration() {
   [ -e /run/frameworkd-migrate-enable ] || return 0
   rm -f /run/frameworkd-migrate-enable
   systemctl daemon-reload >/dev/null 2>&1 || true
   systemctl enable --now frameworkd.service >/dev/null 2>&1 || true
+}
+
+pre_install() {
+  frameworkd_migrate_old_install
+}
+
+pre_upgrade() {
+  frameworkd_migrate_old_install
+}
+
+post_install() {
+  echo "frameworkd starts on demand when you open Framework Settings or the KDE System Settings module."
+  echo "To re-apply touchpad and charge-rate settings at boot, enable it:"
+  echo "  systemctl enable --now frameworkd"
+  frameworkd_enable_after_migration
+}
+
+post_upgrade() {
+  frameworkd_enable_after_migration
 }

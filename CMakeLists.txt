@@ -4,39 +4,60 @@ project(framework-kcm VERSION 0.1.2)
 set(QT_MIN_VERSION "6.6.0")
 set(KF_MIN_VERSION "6.0.0")
 
-find_package(ECM ${KF_MIN_VERSION} REQUIRED NO_MODULE)
-set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+option(BUILD_KCM "Build the KDE System Settings module" ON)
+option(BUILD_GUI "Build the standalone Qt settings application" ON)
+option(BUILD_DAEMON "Build the frameworkd system service with cargo" ON)
+option(INSTALL_PACKAGE_DOCS "Install the license and README through CMake" ON)
 
-include(KDEInstallDirs)
-include(KDECMakeSettings)
-include(KDECompilerSettings NO_POLICY_SCOPE)
+if(BUILD_KCM)
+  find_package(ECM ${KF_MIN_VERSION} REQUIRED NO_MODULE)
+  set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+
+  include(KDEInstallDirs)
+  include(KDECMakeSettings)
+  include(KDECompilerSettings NO_POLICY_SCOPE)
+  find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS CoreAddons I18n KCMUtils)
+else()
+  include(GNUInstallDirs)
+  set(KDE_INSTALL_BINDIR "${CMAKE_INSTALL_BINDIR}")
+  set(KDE_INSTALL_LIBEXECDIR "${CMAKE_INSTALL_LIBEXECDIR}")
+  set(KDE_INSTALL_FULL_LIBEXECDIR "${CMAKE_INSTALL_FULL_LIBEXECDIR}")
+  set(KDE_INSTALL_DATADIR "${CMAKE_INSTALL_DATADIR}")
+  set(KDE_INSTALL_DBUSDIR "${CMAKE_INSTALL_DATADIR}/dbus-1")
+  set(KDE_INSTALL_DBUSSYSTEMSERVICEDIR "${CMAKE_INSTALL_DATADIR}/dbus-1/system-services")
+  set(KDE_INSTALL_SYSTEMDUNITDIR "lib/systemd" CACHE PATH "Systemd unit directory (relative to CMAKE_INSTALL_PREFIX or absolute)")
+  set(KDE_INSTALL_ICONDIR "${CMAKE_INSTALL_DATADIR}/icons")
+endif()
+
 include(FeatureSummary)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS Core DBus Qml Quick)
-find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS CoreAddons I18n KCMUtils)
-
-option(BUILD_DAEMON "Build the frameworkd system service with cargo" ON)
+if(BUILD_GUI)
+  find_package(Qt6 ${QT_MIN_VERSION} REQUIRED COMPONENTS QuickControls2)
+endif()
+qt_policy(SET QTP0001 NEW)
 
 set(DAEMON_PATH "${KDE_INSTALL_FULL_LIBEXECDIR}/frameworkd" CACHE FILEPATH "Path to the Daemon build to use if BUILD_DAEMON=OFF")
 if(BUILD_DAEMON AND NOT DAEMON_PATH STREQUAL "${KDE_INSTALL_FULL_LIBEXECDIR}/frameworkd")
-    message(FATAL_ERROR "Do not modify DAEMON_PATH if BUILD_DAEMON=ON")
+  message(FATAL_ERROR "Do not modify DAEMON_PATH if BUILD_DAEMON=ON")
 endif()
 
 if(BUILD_DAEMON)
-    find_program(CARGO cargo REQUIRED)
-    set(CARGO_TARGET_DIR "${CMAKE_BINARY_DIR}/cargo")
-    add_custom_target(frameworkd ALL
+  find_program(CARGO cargo REQUIRED)
+  set(CARGO_TARGET_DIR "${CMAKE_BINARY_DIR}/cargo")
+  add_custom_target(frameworkd ALL
         COMMAND ${CARGO} build --release --locked
             --manifest-path "${CMAKE_SOURCE_DIR}/daemon/Cargo.toml"
             --target-dir "${CARGO_TARGET_DIR}"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/daemon"
         USES_TERMINAL
         COMMENT "Building frameworkd with cargo")
-    install(PROGRAMS "${CARGO_TARGET_DIR}/release/frameworkd" DESTINATION ${KDE_INSTALL_LIBEXECDIR})
+  install(PROGRAMS "${CARGO_TARGET_DIR}/release/frameworkd" DESTINATION ${KDE_INSTALL_LIBEXECDIR} COMPONENT frameworkd)
 endif()
 
 configure_file(data/io.github.frameworkkcm.Daemon1.service.in
@@ -44,16 +65,43 @@ configure_file(data/io.github.frameworkkcm.Daemon1.service.in
 configure_file(data/frameworkd.service.in
                ${CMAKE_CURRENT_BINARY_DIR}/frameworkd.service @ONLY)
 
-install(FILES data/io.github.frameworkkcm.Daemon1.conf DESTINATION ${KDE_INSTALL_DBUSDIR}/system.d)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/io.github.frameworkkcm.Daemon1.service
-        DESTINATION ${KDE_INSTALL_DBUSSYSTEMSERVICEDIR})
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/frameworkd.service
-        DESTINATION ${KDE_INSTALL_SYSTEMDUNITDIR}/system)
-install(FILES data/io.github.frameworkkcm.policy DESTINATION ${KDE_INSTALL_DATADIR}/polkit-1/actions)
-install(FILES data/icons/framework-kcm.svg DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps)
+if(BUILD_KCM OR BUILD_DAEMON)
+  install(FILES data/io.github.frameworkkcm.Daemon1.conf DESTINATION ${KDE_INSTALL_DBUSDIR}/system.d COMPONENT frameworkd)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/io.github.frameworkkcm.Daemon1.service
+          DESTINATION ${KDE_INSTALL_DBUSSYSTEMSERVICEDIR} COMPONENT frameworkd)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/frameworkd.service
+          DESTINATION ${KDE_INSTALL_SYSTEMDUNITDIR}/system COMPONENT frameworkd)
+  install(FILES data/io.github.frameworkkcm.policy DESTINATION ${KDE_INSTALL_DATADIR}/polkit-1/actions COMPONENT frameworkd)
+endif()
+if(BUILD_KCM)
+  install(FILES data/icons/framework-kcm.svg
+          DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps COMPONENT kcm)
+endif()
+if(BUILD_GUI)
+  install(FILES data/icons/framework-kcm.svg
+          DESTINATION ${KDE_INSTALL_ICONDIR}/hicolor/scalable/apps
+          RENAME framework-gui.svg COMPONENT gui)
+  install(FILES data/com.github.framework-settings.metainfo.xml
+          DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo COMPONENT gui)
+endif()
 
-add_subdirectory(kcm)
-ki18n_install(po)
+if(INSTALL_PACKAGE_DOCS)
+  install(FILES LICENSE README.md
+          DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/framework-settings COMPONENT meta)
+endif()
+
+if(BUILD_KCM)
+  set(_install_default_component "${CMAKE_INSTALL_DEFAULT_COMPONENT_NAME}")
+  set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME kcm)
+  add_subdirectory(kcm)
+  ki18n_install(po)
+  set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "${_install_default_component}")
+  unset(_install_default_component)
+endif()
+
+if(BUILD_GUI)
+  add_subdirectory(gui)
+endif()
 
 include(packaging/cpack.cmake)
 

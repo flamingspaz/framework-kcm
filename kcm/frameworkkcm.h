@@ -2,7 +2,11 @@
 
 #pragma once
 
+#ifdef FRAMEWORK_STANDALONE
+#include <QObject>
+#else
 #include <KQuickConfigModule>
+#endif
 
 #include <QDBusError>
 #include <QDBusMessage>
@@ -27,9 +31,16 @@ struct FrameworkSettings {
     bool operator==(const FrameworkSettings &) const = default;
 };
 
+#ifdef FRAMEWORK_STANDALONE
+class FrameworkKcm : public QObject {
+#else
 class FrameworkKcm : public KQuickConfigModule {
+#endif
     Q_OBJECT
 
+#ifdef FRAMEWORK_STANDALONE
+    Q_PROPERTY(bool needsSave READ needsSave NOTIFY needsSaveChanged)
+#endif
     Q_PROPERTY(bool daemonAvailable READ daemonAvailable NOTIFY daemonAvailableChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(QString errorMessage READ errorMessage NOTIFY errorMessageChanged)
@@ -68,11 +79,19 @@ class FrameworkKcm : public KQuickConfigModule {
     Q_PROPERTY(QString clickForce READ clickForce WRITE setClickForce NOTIFY settingsChanged)
 
 public:
+#ifdef FRAMEWORK_STANDALONE
+    explicit FrameworkKcm(QObject *parent = nullptr);
+    [[nodiscard]] bool needsSave() const { return m_needsSave; }
+    Q_INVOKABLE void load();
+    Q_INVOKABLE void save();
+    Q_INVOKABLE void defaults();
+#else
     FrameworkKcm(QObject *parent, const KPluginMetaData &data);
 
     void load() override;
     void save() override;
     void defaults() override;
+#endif
 
     [[nodiscard]] bool daemonAvailable() const { return m_daemonAvailable; }
     [[nodiscard]] bool busy() const { return m_busy; }
@@ -119,6 +138,7 @@ public:
     void setClickForce(const QString &value);
 
     Q_INVOKABLE void clearError();
+    Q_INVOKABLE void retryService();
     Q_INVOKABLE void setFixtureModel(const QString &model);
     Q_INVOKABLE bool configureSchedule(bool enabled, const QVariantList &schedules);
     // Charge to 100% until the next boot; applied immediately, not on Apply
@@ -126,6 +146,9 @@ public:
     Q_INVOKABLE void cancelChargeLimitOverride();
 
 Q_SIGNALS:
+#ifdef FRAMEWORK_STANDALONE
+    void needsSaveChanged();
+#endif
     void daemonAvailableChanged();
     void busyChanged();
     void errorMessageChanged();
@@ -158,6 +181,7 @@ private:
     void settingsEdited();
     void setError(const QString &message);
     void setWriteError(const QDBusError &error);
+    void updateNeedsSave(bool needsSave);
     void runAction(const QString &method);
     void setBusy(bool busy);
     void setDaemonAvailable(bool available);
@@ -174,6 +198,9 @@ private:
     static PendingWrite fanWrite(const FrameworkSettings &s);
     QList<PendingWrite> m_writeQueue;
 
+#ifdef FRAMEWORK_STANDALONE
+    bool m_needsSave = false;
+#endif
     bool m_daemonAvailable = true;
     bool m_busy = false;
     bool m_fixtureMode = false;

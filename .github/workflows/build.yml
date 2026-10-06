@@ -14,7 +14,7 @@ env:
   ARCH_DEPS: >-
     base-devel git rust cmake extra-cmake-modules
     qt6-base qt6-declarative kcoreaddons ki18n kcmutils kirigami
-    systemd-libs polkit hicolor-icon-theme
+    hidapi libusb systemd-libs polkit hicolor-icon-theme
   UBUNTU_DEPS: >-
     build-essential cmake git ca-certificates pkgconf gettext dpkg-dev file
     rustc cargo extra-cmake-modules qt6-base-dev qt6-declarative-dev
@@ -60,6 +60,30 @@ jobs:
             echo "::warning::po/ is out of date, run po/update.sh"
           fi
 
+  gui-only:
+    name: Build standalone GUI without KDE Frameworks
+    runs-on: ubuntu-latest
+    container: ubuntu:26.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential cmake qt6-base-dev qt6-declarative-dev
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build standalone GUI
+        run: |
+          cmake -B build-gui -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+            -DBUILD_KCM=OFF -DBUILD_GUI=ON -DBUILD_DAEMON=OFF
+          cmake --build build-gui --target framework-settings -j"$(nproc)"
+          if ldd build-gui/gui/framework-settings | grep -Eq 'libKF[56]'; then
+            echo "::error::Standalone GUI unexpectedly links KDE Frameworks libraries"
+            exit 1
+          fi
+
   version:
     name: Check tag matches version
     if: startsWith(github.ref, 'refs/tags/v')
@@ -98,8 +122,8 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           mkdir -p /tmp/pkg
-          git archive --format=tar.gz --prefix="framework-kcm-$VERSION/" -o "/tmp/pkg/framework-kcm-$VERSION.tar.gz" HEAD
-          cp packaging/arch/PKGBUILD packaging/arch/framework-kcm.install /tmp/pkg/
+          git archive --format=tar.gz --prefix="framework-settings-$VERSION/" -o "/tmp/pkg/framework-settings-$VERSION.tar.gz" HEAD
+          cp packaging/arch/PKGBUILD packaging/arch/frameworkd.install /tmp/pkg/
           sed -i \
             -e "s|^pkgver=.*|pkgver=$VERSION|" \
             -e "s|^url=.*|url='$GITHUB_SERVER_URL/$GITHUB_REPOSITORY'|" \
@@ -117,8 +141,9 @@ jobs:
           name: arch-package
           # Leave out the -debug split package
           path: |
-            /tmp/pkg/framework-kcm-*.pkg.tar.zst
-            !/tmp/pkg/framework-kcm-debug-*.pkg.tar.zst
+            /tmp/pkg/framework-*.pkg.tar.zst
+            /tmp/pkg/frameworkd-*.pkg.tar.zst
+            !/tmp/pkg/*-debug-*.pkg.tar.zst
           if-no-files-found: error
 
   ubuntu-package:
@@ -148,7 +173,7 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ubuntu-package
-          path: build/framework-kcm_*.deb
+          path: build/*.deb
           if-no-files-found: error
 
   release:

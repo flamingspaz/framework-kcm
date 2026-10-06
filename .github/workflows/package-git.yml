@@ -6,11 +6,13 @@ on:
     branches: [main]
   pull_request:
     paths:
-      - "packaging/fedora/framework-kcm-git.spec"
-      - "packaging/fedora/framework-kcm.spec"
+      - "packaging/fedora/framework-settings-git.spec"
+      - "packaging/fedora/framework-settings.spec"
       - "anda.hcl"
       - "kcm/**"
       - "daemon/**"
+      - "gui/**"
+      - "data/**"
   workflow_dispatch:
 jobs:
   framework-kcm:
@@ -28,8 +30,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Build KCM
+      - name: Build RPM
         uses: FyraLabs/anda-build@main
         with:
-          name: "kcm-git"
+          name: "framework-settings-git"
           mockConfig: terra-44-${{ matrix.arch }}

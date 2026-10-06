@@ -1,11 +1,11 @@
-project "kcm" {
+project "framework-settings" {
     rpm {
-        spec = "packaging/fedora/framework-kcm.spec"
+        spec = "packaging/fedora/framework-settings.spec"
     }
 }
 
-project "kcm-git" {
+project "framework-settings-git" {
     rpm {
-        spec = "packaging/fedora/framework-kcm-git.spec"
+        spec = "packaging/fedora/framework-settings-git.spec"
     }
 }

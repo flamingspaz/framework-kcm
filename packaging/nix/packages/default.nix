@@ -4,9 +4,10 @@ let
   version = "0.1.2";
 in
 rec {
-  framework-kcm = pkgs.callPackage ./framework-kcm.nix { inherit version frameworkd; };
   frameworkd = pkgs.callPackage ./frameworkd.nix { inherit version; };
+  framework-settings = pkgs.callPackage ./framework-settings.nix { inherit version frameworkd; };
 
-  default = framework-kcm;
+  default = framework-settings;
+  framework-kcm = pkgs.lib.warnOnInstantiate "framework-kcm has been renamed to framework-settings" framework-settings;
   framework-kcmd = pkgs.lib.warnOnInstantiate "framework-kcmd has been renamed to frameworkd" frameworkd;
 }

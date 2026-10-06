@@ -3,6 +3,7 @@ name: C++ CI
   push:
     paths:
       - "kcm/**"
+      - "gui/**"
       - "CMakeLists.txt"
       - ".clang-format"
       - ".clang-tidy"

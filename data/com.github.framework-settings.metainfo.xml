@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<component type="desktop-application">
+  <id>com.github.framework-settings</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <icon type="stock">framework-gui</icon>
+
+  <name>Framework Settings</name>
+  <summary>Standalone Qt settings application for Framework laptops</summary>
+  <developer id="io.github.flamingspaz">
+    <name>Framework KCM contributors</name>
+  </developer>
+
+  <description>
+    <p
+        >Standalone Qt application for configuring Framework laptop battery charging, fans, touchpad, LEDs, firmware information, and USB-C ports. It does not require KDE.</p>
+  </description>
+
+  <launchable type="desktop-id">io.github.frameworkkcm.desktop</launchable>
+  <url type="homepage">https://github.com/flamingspaz/framework-settings</url>
+  <url type="bugtracker">https://github.com/flamingspaz/framework-settings/issues</url>
+  <content_rating type="oars-1.1" />
+  <categories>
+    <category>Settings</category>
+    <category>HardwareSettings</category>
+  </categories>
+
+  <releases>
+    <release version="0.1.2" date="2026-10-04" />
+  </releases>
+</component>

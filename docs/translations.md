@@ -6,6 +6,10 @@ French translations in `po/<lang>/kcm_framework.po`. These are **machine
 translations that still need review by native speakers**; corrections are
 welcome.
 
+The standalone `framework-settings` application is English-only for now. Its
+Qt Quick strings are marked for translation, but the application does not yet
+load Qt translation catalogs.
+
 Two things aren't translated through gettext and are edited by hand:
 
 - the System Settings name and description (`Name[xx]` and

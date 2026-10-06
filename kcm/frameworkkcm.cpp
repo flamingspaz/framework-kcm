@@ -2,9 +2,11 @@
 
 #include "frameworkkcm.h"
 
+#ifndef FRAMEWORK_STANDALONE
 #include <KLocalizedString>
-#include <KPluginFactory>
+#endif
 
+#include <QCoreApplication>
 #include <QDBusArgument>
 #include <QDBusConnection>
 #include <QDBusPendingCallWatcher>
@@ -23,11 +25,21 @@
 
 #include <algorithm>
 
-K_PLUGIN_CLASS_WITH_JSON(FrameworkKcm, "kcm_framework.json")
+#ifdef FRAMEWORK_STANDALONE
+#define i18n(text) QCoreApplication::translate("FrameworkSettings", text)
+#endif
 
 using namespace Qt::StringLiterals;
 
 namespace {
+    QString localized(const char *text) {
+#ifdef FRAMEWORK_STANDALONE
+        return QCoreApplication::translate("FrameworkSettings", text);
+#else
+        return i18n(text);
+#endif
+    }
+
     const QString s_service = u"io.github.frameworkkcm.Daemon1"_s;
     const QString s_path = u"/io/github/frameworkkcm/Daemon1"_s;
     const QString s_interface = u"io.github.frameworkkcm.Daemon1"_s;
@@ -111,8 +123,14 @@ namespace {
     }
 } // namespace
 
+#ifdef FRAMEWORK_STANDALONE
+FrameworkKcm::FrameworkKcm(QObject *parent) : QObject(parent) {
+#else
 FrameworkKcm::FrameworkKcm(QObject *parent, const KPluginMetaData &data) : KQuickConfigModule(parent, data) {
+#endif
+#ifndef FRAMEWORK_STANDALONE
     setButtons(Help | Default | Apply);
+#endif
 
     m_fixtureMode = qEnvironmentVariableIntValue("FRAMEWORK_KCM_FIXTURE") != 0;
     m_fixtureModel = qEnvironmentVariable("FRAMEWORK_KCM_FIXTURE_MODEL").toLower();
@@ -177,7 +195,9 @@ void FrameworkKcm::call(const QString &method, const QVariantList &args, const R
 }
 
 void FrameworkKcm::load() {
+#ifndef FRAMEWORK_STANDALONE
     KQuickConfigModule::load();
+#endif
 
     // Reset: drop unsaved edits, then take whatever the hardware reports
     m_current = m_saved;
@@ -206,6 +226,19 @@ void FrameworkKcm::load() {
             }
         });
 
+    loadSettings();
+    refreshLive();
+}
+
+void FrameworkKcm::retryService() {
+    clearError();
+
+    // Retry reads without resetting the user's unsaved edits. Calling the
+    // service also lets D-Bus activation start frameworkd when it is stopped.
+    call(u"GetSystemInfo"_s, {}, [this](const QDBusMessage &reply) {
+        m_systemInfo = replyArg(reply, 0).toMap();
+        Q_EMIT systemInfoChanged();
+    });
     loadSettings();
     refreshLive();
 }
@@ -448,7 +481,9 @@ FrameworkKcm::PendingWrite FrameworkKcm::fanWrite(const FrameworkSettings &s) {
 }
 
 void FrameworkKcm::save() {
+#ifndef FRAMEWORK_STANDALONE
     KQuickConfigModule::save();
+#endif
     if (m_fixtureMode) {
         m_saved = m_current;
         settingsEdited();
@@ -488,6 +523,7 @@ void FrameworkKcm::runNextWrite() {
         setBusy(false);
         // Everything was written; reload merges in what the hardware now reports
         m_saved = m_current;
+        updateNeedsSave(false);
         loadSettings();
         return;
     }
@@ -501,7 +537,7 @@ void FrameworkKcm::runNextWrite() {
             setBusy(false);
             setWriteError(error);
             // Keep the unsaved edits so the user can retry
-            setNeedsSave(true);
+            updateNeedsSave(true);
         },
         s_writeTimeout);
 }
@@ -533,16 +569,18 @@ void FrameworkKcm::runAction(const QString &method) {
 
 void FrameworkKcm::setWriteError(const QDBusError &error) {
     if (error.name() == u"io.github.frameworkkcm.Error.NotAuthorized"_s) {
-        setError(i18n("You are not authorized to change this setting."));
+        setError(localized("You are not authorized to change this setting."));
     } else if (isServiceMissing(error)) {
-        setError(i18n("The Framework hardware service is not running."));
+        setError(localized("The Framework hardware service is not running."));
     } else {
         setError(error.message());
     }
 }
 
 void FrameworkKcm::defaults() {
+#ifndef FRAMEWORK_STANDALONE
     KQuickConfigModule::defaults();
+#endif
 
     m_current = withDefaults(m_current);
     settingsEdited();
@@ -550,8 +588,10 @@ void FrameworkKcm::defaults() {
 
 void FrameworkKcm::settingsEdited() {
     Q_EMIT settingsChanged();
-    setNeedsSave(m_current != m_saved);
+    updateNeedsSave(m_current != m_saved);
+#ifndef FRAMEWORK_STANDALONE
     setRepresentsDefaults(m_current == withDefaults(m_current));
+#endif
 }
 
 #define SETTER(Name, member, Type)                                                                                     \
@@ -576,6 +616,17 @@ SETTER(ClickForce, clickForce, const QString &)
 #undef SETTER
 
 void FrameworkKcm::clearError() { setError(QString()); }
+
+void FrameworkKcm::updateNeedsSave(bool needsSave) {
+#ifdef FRAMEWORK_STANDALONE
+    if (m_needsSave != needsSave) {
+        m_needsSave = needsSave;
+        Q_EMIT needsSaveChanged();
+    }
+#else
+    setNeedsSave(needsSave);
+#endif
+}
 
 void FrameworkKcm::loadSchedule() {
     const auto path =
@@ -802,5 +853,3 @@ void FrameworkKcm::setDaemonAvailable(bool available) {
         Q_EMIT daemonAvailableChanged();
     }
 }
-
-#include "frameworkkcm.moc"

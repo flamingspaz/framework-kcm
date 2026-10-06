@@ -1,5 +1,5 @@
 {
-  description = "Framework Laptop settings module for KDE System Settings";
+  description = "Framework Laptop settings GUI, KDE module, and system service";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 

@@ -1,8 +1,9 @@
 # Packaging
 
-Framework KCM is packaged with distro-native tools. The packages include the
-System Settings module, its D-Bus and polkit configuration, translations, and
-the `frameworkd` service.
+Framework settings is packaged with distro-native tools. Fedora, Arch, and
+Debian produce a `framework-settings` meta-package plus separate `framework-gui`,
+`framework-kcm`, and `frameworkd` packages. The GUI package has no KDE
+dependency; both interfaces depend on the service package for hardware access.
 
 ## Fedora RPMs
 
@@ -16,25 +17,32 @@ You'll also need Terra's mock configs, which you can get by installing `terra-mo
 Then, run this command from the repository root:
 
 ```sh
-anda build -c terra-44-x86_64 kcm-git
+anda build -c terra-44-x86_64 framework-settings-git
 ```
 
 This builds the Git package from the current source revision using
 `framework-kcm-git.spec`. To build the versioned package from its release tag, run:
 
 ```sh
-anda build -c terra-44-x86_64 kcm
+anda build -c terra-44-x86_64 framework-settings
 ```
 
-The versioned spec uses the `v%{version}` source archive. The Fedora specs use
-Fedora's KF6 RPM macros (`%cmake_kf6`, `%cmake_build`, and `%cmake_install`)
-and install the plugin under `%{_kf6_qtplugindir}`. The CI workflow for the
-Git RPM is `.github/workflows/package-git.yml`.
+The versioned spec uses the `v%{version}` source archive. Both specs produce
+`framework-settings` as a meta-package, with separate GUI, KCM, and daemon
+packages; installing `framework-gui` alone avoids the KDE dependencies. They
+use Fedora's KF6 RPM macros (`%cmake_kf6`, `%cmake_build`, and
+`%cmake_install`) and install the plugin under `%{_kf6_qtplugindir}`. They set
+`INSTALL_PACKAGE_DOCS=OFF` so RPM's `%license` and `%doc` macros own the docs
+and license files. The CI workflow for the Git RPM is
+`.github/workflows/package-git.yml`.
 
 ## Arch Linux
 
-The Arch package is described by `packaging/arch/PKGBUILD`, with service
-install/removal messages in `packaging/arch/framework-kcm.install`. The release
+Arch packages are described by `packaging/arch/PKGBUILD`, with service
+install/removal messages in `packaging/arch/frameworkd.install`. The
+`framework-settings` meta-package installs all three components. Install
+`framework-gui` and `frameworkd` directly for a non-KDE desktop, or
+`framework-kcm` and `frameworkd` for the System Settings module. The release
 workflow creates a versioned source archive, stages these packaging files,
 sets the repository URL and version, and runs `makepkg`. The PKGBUILD expects
 that staged archive next to it, so it is not a direct `makepkg` invocation from
@@ -72,10 +80,19 @@ cmake --build build --parallel
 (cd build && cpack -G DEB)
 ```
 
-The `.deb` is written into `build/`. CPack uses `dpkg-shlibdeps` for shared
-library dependencies; QML runtime dependencies are listed explicitly in
-`packaging/cpack.cmake`. The maintainer scripts reload D-Bus and systemd,
-enable the service on installation, and remove its state on purge.
+CPack writes four `.deb` files into `build/`: the `framework-settings`
+meta-package and the `framework-gui`, `framework-kcm`, and `frameworkd`
+components. Install all four local files together:
+
+```sh
+sudo apt install ./framework-*.deb
+```
+
+Alternatively, install the meta-package from a configured repository.
+CPack uses `dpkg-shlibdeps` for shared-library dependencies and lists QML
+runtime dependencies explicitly in `packaging/cpack.cmake`. The daemon package
+owns the D-Bus, PolicyKit, and systemd files; its maintainer scripts reload
+D-Bus/systemd and enable the service on install.
 
 ## Releases and CI
 

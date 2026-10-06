@@ -37,7 +37,11 @@ Series 3)**. Other Framework laptops use the same embedded controller
 interface, so most features should work there too, but they haven't been
 tested.
 
-Requires KDE Plasma 6.
+The System Settings module requires KDE Plasma 6. A separate desktop app,
+`framework-settings`, is also provided for other desktop environments; it is
+built with Qt Quick Controls and has no KDE runtime dependency.
+It follows Qt Quick Controls' configured style (including KDE's); on Linux
+with no style configured, Qt defaults to the desktop-oriented Fusion style.
 
 ## Install
 
@@ -61,14 +65,31 @@ and using the provided NixOS module. Below is a basic `flake.nix` example:
   outputs = { nixpkgs, framework-settings, ... }: {
     nixosConfigurations = {
       yourHost = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
         modules = [
-          framework-settings.nixosModules.framework-kcm
-          { programs.framework-kcm.enable = true; }
-          ...
+          ./hardware-configuration.nix
+          framework-settings.nixosModules.framework-settings
+          { programs.framework-settings.enable = true; }
+          # rest of your system configuration here.
         ];
       };
     };
   };
+}
+```
+
+If you wish to only install the the GUI application or KCM, you can override
+the framework-settings package in a system module:
+
+```nix
+let
+  packages = framework-settings.packages.${pkgs.stdenv.hostPlatform.system};
+in
+{
+  programs.framework-settings.package = packages.framework-settings.override {
+    withGui = true;
+    withKcm = true;
+  }
 }
 ```
 
@@ -91,55 +112,84 @@ in
 {
   imports = [
     ./hardware-configuration.nix
-    framework-settings.nixosModules.framework-kcm
+    framework-settings.nixosModules.framework-settings
   ];
-  programs.framework-kcm.enable = true;
-  ...
+  programs.framework-settings.enable = true;
+  # rest of your system configuration here.
 }
+```
+
+If you wish to only install the the GUI application or KCM, you can override
+the framework-settings package in your `configuration.nix`:
+
+```nix
+programs.framework-settings.package = framework-settings.packages.framework-settings.override {
+  withGui = true;
+  withKcm = true;
+};
 ```
 
 ### Arch Linux
 
 ```sh
-sudo pacman -U framework-kcm-*.pkg.tar.zst
+sudo pacman -U framework-*.pkg.tar.zst
 sudo systemctl enable --now frameworkd
 ```
+
+The Arch `framework-settings` meta-package installs the GUI, KCM, and service.
+For a non-KDE desktop, install `framework-gui` instead; it brings in
+`frameworkd` without the KCM.
 
 ### Ubuntu 26.04
 
 ```sh
-sudo apt install ./framework-kcm_*.deb
+sudo apt install ./framework-*.deb
 ```
 
-The Ubuntu package enables the background service for you.
+This installs the `framework-settings` meta-package and its GUI, KCM, and
+service packages. From a repository, install `framework-gui` alone for a
+non-KDE setup; it pulls in the daemon but not the KCM. The daemon package
+configures and enables the background service.
 
 ### Fedora
 
-`framework-kcm` is available in [Terra](https://terrapkg.com).
+The `framework-settings` meta-package is available in [Terra](https://terrapkg.com).
 
 ```sh
-sudo dnf install framework-kcm
+sudo dnf install framework-settings
 ```
 
+For a non-KDE desktop, install only `framework-gui`; it pulls in the service
+without installing the KCM.
+
 Then open **System Settings → System → Framework Laptop**, or run
-`kcmshell6 kcm_framework`.
+`kcmshell6 kcm_framework`. On non-KDE desktops, launch **Framework Settings**
+or run `framework-settings`.
 
 The `frameworkd` service starts on its own when you open the settings
 page. Enabling it also starts it at boot, so settings the hardware forgets
 (touchpad feedback, click force, charge speed) are applied again after a
 restart.
 
+To uninstall the full suite, remove the `framework-settings` meta-package. If
+installed separately, remove the packages you chose (`framework-gui`,
+`framework-kcm`, and/or `frameworkd`). On Arch,
+`sudo pacman -Rns framework-settings` also removes unneeded subpackages; on
+Debian-based systems, use `sudo apt remove framework-settings` and optionally
+`sudo apt autoremove`.
+
 ## Fixture mode
 
-To preview the pages without Framework hardware or the daemon, launch the KCM
-with fixture mode enabled. All readings are simulated, setting changes stay in
-memory, and scheduling does not create systemd units:
+To preview either UI without Framework hardware or the daemon, launch it with
+fixture mode enabled. Readings are simulated, setting changes stay in memory,
+and scheduling does not create systemd units:
 
 ```sh
 FRAMEWORK_KCM_FIXTURE=1 kcmshell6 kcm_framework
+FRAMEWORK_KCM_FIXTURE=1 ./build-qt/gui/framework-settings
 ```
 
-The Overview tab then lets you choose a profile for testing model-specific
+The Overview tab lets you choose a hardware profile for testing model-specific
 controls. You can also pick a profile at launch:
 
 ```sh
@@ -149,7 +199,7 @@ FRAMEWORK_KCM_FIXTURE=1 FRAMEWORK_KCM_FIXTURE_MODEL=framework-13 kcmshell6 kcm_f
 FRAMEWORK_KCM_FIXTURE=1 FRAMEWORK_KCM_FIXTURE_MODEL=framework-13-pro kcmshell6 kcm_framework
 ```
 
-To uninstall, run `sudo pacman -R framework-kcm` or `sudo apt remove framework-kcm`.
+The same `FRAMEWORK_KCM_FIXTURE_MODEL` values work with the standalone GUI.
 
 ## Permissions
 
@@ -183,10 +233,11 @@ for an administrator password.
 
 ## Languages
 
-The module follows your System Settings language. It's available in
-English, Dutch, German, Spanish and French. The non-English translations
-were machine-generated and haven't been reviewed by native speakers yet,
-so corrections are welcome. See [docs/translations.md](docs/translations.md).
+The KCM follows your System Settings language and is available in English,
+Dutch, German, Spanish and French. The standalone `framework-settings` app is
+English-only for now. The non-English KCM translations were machine-generated
+and haven't been reviewed by native speakers yet, so corrections are welcome.
+See [docs/translations.md](docs/translations.md).
 
 ## Documentation
 
