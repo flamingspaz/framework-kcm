@@ -68,8 +68,9 @@ and using the provided NixOS module. Below is a basic `flake.nix` example:
         system = "x86_64-linux";
         modules = [
           ./hardware-configuration.nix
-          framework-settings.nixosModules.framework-kcm
-          { programs.framework-kcm.enable = true; }
+          framework-settings.nixosModules.framework-settings
+          { programs.framework-settings.enable = true; }
+          # rest of your system configuration here.
         ];
       };
     };
@@ -77,18 +78,20 @@ and using the provided NixOS module. Below is a basic `flake.nix` example:
 }
 ```
 
-The flake exports `framework-settings` as its default package, which includes
-the GUI, KCM, and daemon. It also exposes `framework-gui`, `framework-kcm`, and
-`frameworkd` individually under `packages.<system>`. The channel import below
-exposes the same package set under `framework-settings.packages`.
+If you wish to only install the the GUI application or KCM, you can override
+the framework-settings package in a system module:
 
-For a non-KDE desktop, replace `nixosModules.framework-kcm` with
-`nixosModules.framework-gui` and enable `programs.framework-gui.enable` instead.
-Both modules enable `services.frameworkd`, which registers the daemon's D-Bus,
-PolicyKit, and systemd configuration and starts it at boot. Import both UI
-modules and enable both options to install both interfaces. Installing a
-package alone does not register the system service; use the NixOS modules for
-hardware access.
+```nix
+let
+  packages = framework-settings.packages.${pkgs.stdenv.hostPlatform.system};
+in
+{
+  programs.framework-settings.package = packages.framework-settings.override {
+    withGui = true;
+    withKcm = true;
+  }
+}
+```
 
 ### NixOS (nix-channel)
 
@@ -109,11 +112,21 @@ in
 {
   imports = [
     ./hardware-configuration.nix
-    framework-settings.nixosModules.framework-kcm
+    framework-settings.nixosModules.framework-settings
   ];
-  programs.framework-kcm.enable = true;
-  # Keep any other existing system configuration here.
+  programs.framework-settings.enable = true;
+  # rest of your system configuration here.
 }
+```
+
+If you wish to only install the the GUI application or KCM, you can override
+the framework-settings package in your `configuration.nix`:
+
+```nix
+programs.framework-settings.package = framework-settings.packages.framework-settings.override {
+  withGui = true;
+  withKcm = true;
+};
 ```
 
 ### Arch Linux

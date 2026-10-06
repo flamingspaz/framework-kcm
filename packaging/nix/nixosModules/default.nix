@@ -1,7 +1,6 @@
 rec {
-  framework-kcm = import ./framework-kcm.nix;
-  framework-gui = import ./framework-gui.nix;
-  frameworkd = import ./frameworkd.nix;
+  framework-settings = import ./framework-settings.nix;
 
-  default = framework-kcm;
+  default = framework-settings;
+  framework-kcm = import ./framework-kcm.nix;
 }
